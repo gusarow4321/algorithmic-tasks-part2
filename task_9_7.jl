@@ -1,0 +1,44 @@
+isapproxzero(a) = isapprox(a, 0.0; atol = 1e-8)
+
+function findMaxAbsInColumn(A::Matrix, k)
+    rows, _ = size(A)
+    maxPosition = k
+    for i in k+1:rows
+        if abs(A[i, k]) > abs(A[maxPosition, k])
+            maxPosition = i
+        end
+    end
+
+    return maxPosition
+end
+
+function column_to_zeroes!(A, k, maxPosition)
+    if maxPosition != k
+        A[k, :], A[maxPosition, :] = A[maxPosition, :], A[k, :]
+    end
+
+    if isapproxzero(A[k,k])
+        for i in k:lastindex(A,1)
+            A[i, k] = 0
+            return
+        end
+    end
+
+    for i in k+1:(lastindex(A, 1))
+        if isapproxzero(A[i,k])
+            A[i,k] = 0
+            continue
+        end
+        t = -A[i,k]/A[k,k]
+        A[i, i:end] += t *(A[k, i:end])
+        A[i,k] = 0
+    end
+end
+
+function convert!(A)
+    rows, columns = size(A)
+    for k in 1:rows
+        imax = findMaxAbsInColumn(A, k)
+        column_to_zeroes!(A, k, imax)
+    end
+end
